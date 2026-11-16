@@ -44,7 +44,7 @@ public final class TempoEvents {
 
     /** Fired for every entity added to the client level (Fabric ClientEntityEvents.ENTITY_LOAD). */
     public static void onEntityLoad(Entity e) {
-        if (e.getType() != EntityType.ENDER_PEARL) return;
+        if (e.getType() != EntityType.THROWN_ENDERPEARL) return;
         if (e.tickCount > 2) return; // ignore pearls that merely streamed in mid-flight
         AbstractClientPlayer target = TargetTracker.INSTANCE.getTarget();
         if (target == null) return;

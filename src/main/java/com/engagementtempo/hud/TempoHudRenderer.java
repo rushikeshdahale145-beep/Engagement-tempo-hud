@@ -52,7 +52,7 @@ public final class TempoHudRenderer {
 
     public static void render(GuiGraphicsExtractor g, DeltaTracker deltaTracker) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.options.hideGui) return;
+        if (mc.player == null) return;
 
         long now = System.nanoTime();
         if (previewStartNs != 0 && now - previewStartNs > PREVIEW_MAX_NS) previewStartNs = 0;

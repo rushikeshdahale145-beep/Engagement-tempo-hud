@@ -24,9 +24,27 @@ import java.util.Locale;
 public final class TempoHudRenderer {
     public static final Identifier ID = Identifier.fromNamespaceAndPath("engagement_tempo", "tempo_hud");
 
-    private static final ItemStack SHIELD = new ItemStack(Items.SHIELD);
-    private static final ItemStack PEARL = new ItemStack(Items.ENDER_PEARL);
-    private static final ItemStack TOTEM = new ItemStack(Items.TOTEM_OF_UNDYING);
+    // Item stacks must NOT be built in a static initializer: this class is loaded during mod
+    // init, before item components are bound ("Components not bound yet"). Build them lazily
+    // on first render instead.
+    private static ItemStack shieldStack;
+    private static ItemStack pearlStack;
+    private static ItemStack totemStack;
+
+    private static ItemStack shieldIcon() {
+        if (shieldStack == null) shieldStack = new ItemStack(Items.SHIELD);
+        return shieldStack;
+    }
+
+    private static ItemStack pearlIcon() {
+        if (pearlStack == null) pearlStack = new ItemStack(Items.ENDER_PEARL);
+        return pearlStack;
+    }
+
+    private static ItemStack totemIcon() {
+        if (totemStack == null) totemStack = new ItemStack(Items.TOTEM_OF_UNDYING);
+        return totemStack;
+    }
 
     private static final int ICON = 12;
     private static final int ROW_GAP = 4;
@@ -81,19 +99,19 @@ public final class TempoHudRenderer {
 
         Timer s = csm.shield();
         if (cfg.shield && s != null && !s.finished(now)) {
-            rows.add(new Row(SHIELD, s.remaining(now), null, SHIELD_RGB, s.alpha(now)));
+            rows.add(new Row(shieldIcon(), s.remaining(now), null, SHIELD_RGB, s.alpha(now)));
         }
         Timer p = csm.pearl();
         if (cfg.pearl && p != null && !p.finished(now)) {
-            rows.add(new Row(PEARL, p.remaining(now), null, PEARL_RGB, p.alpha(now)));
+            rows.add(new Row(pearlIcon(), p.remaining(now), null, PEARL_RGB, p.alpha(now)));
         }
         Timer t = csm.totemDisplay();
         if (cfg.totem && t != null && !t.finished(now)) {
             if (csm.totemPhase() == TotemPhase.RESULT) {
                 String txt = String.format(Locale.ROOT, "%.2fs", csm.totemSeconds());
-                rows.add(new Row(TOTEM, -1f, txt, CombatStateManager.totemColor(csm.totemSeconds()), t.alpha(now)));
+                rows.add(new Row(totemIcon(), -1f, txt, CombatStateManager.totemColor(csm.totemSeconds()), t.alpha(now)));
             } else if (csm.totemPhase() == TotemPhase.NO_TOTEM) {
-                rows.add(new Row(TOTEM, -1f, "NO TOTEM", RED_RGB, t.alpha(now)));
+                rows.add(new Row(totemIcon(), -1f, "NO TOTEM", RED_RGB, t.alpha(now)));
             }
         }
         return rows;
@@ -103,11 +121,11 @@ public final class TempoHudRenderer {
     private static List<Row> previewRows(long now) {
         double t = (now - previewStartNs) / 1_000_000_000.0;
         List<Row> rows = new ArrayList<>(2);
-        rows.add(new Row(SHIELD, (float) (1.0 - (t % 5.0) / 5.0), null, SHIELD_RGB, 1f));
+        rows.add(new Row(shieldIcon(), (float) (1.0 - (t % 5.0) / 5.0), null, SHIELD_RGB, 1f));
         if (((long) (t / 3.0)) % 2 == 0) {
-            rows.add(new Row(PEARL, (float) (1.0 - (t % 1.0)), null, PEARL_RGB, 1f));
+            rows.add(new Row(pearlIcon(), (float) (1.0 - (t % 1.0)), null, PEARL_RGB, 1f));
         } else {
-            rows.add(new Row(TOTEM, -1f, "0.40s", CombatStateManager.totemColor(0.40f), 1f));
+            rows.add(new Row(totemIcon(), -1f, "0.40s", CombatStateManager.totemColor(0.40f), 1f));
         }
         return rows;
     }
